@@ -153,7 +153,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="loading-plugins"><a class="header" href="#loading-plugins">Loading Plugins</a></h1>
-<p>Plugins can either be loaded through a <a href="./creating-a-layout.html#plugin">Layout</a>, through the <a href="./zellij-plugin.html">command line</a>, or from a <a href="keybindings-possible-actions.html#launchorfocusplugin">keybinding</a>.</p>
+<p>Plugins can either be loaded through a <a href="./creating-a-layout.html#plugin">Layout</a>, through the <a href="./zellij-plugin-and-pipe.html#zellij-plugin">command line</a>, or from a <a href="keybindings-possible-actions.html#launchorfocusplugin">keybinding</a>.</p>
 <h2 id="on-startup"><a class="header" href="#on-startup">On startup</a></h2>
 <p>Plugins can also be loaded on startup through the <code>load_plugins</code> <a href="./configuration.html">configuration block</a>. Eg.</p>
 <pre><code>load_plugins {
@@ -170,16 +170,36 @@
 <p>Plugins are referred to by URLs. Currently there are four supported schemas:</p>
 <ol>
 <li>The file schema: <code>file:/absolute/path/to/my/plugin.wasm</code> - for reading plugins from the local HD</li>
-<li>The built-in <code>zellij:</code> schema (eg. <code>zellij:tab-bar</code>) for loading built-in zellij plugins.</li>
+<li>The built-in <code>zellij:</code> schema (eg. <code>zellij:bars</code>) for loading built-in zellij plugins.</li>
 <li>Urls (<code>http(s)://path/to/my/plugin.wasm</code>)</li>
 <li>Bare aliases (<code>filepicker</code>), see <a href="./plugin-aliases.html">Plugin Aliases</a></li>
 </ol>
+<h2 id="built-in-plugins"><a class="header" href="#built-in-plugins">Built-in plugins</a></h2>
+<p>These plugins are bundled with Zellij and can be loaded with the <code>zellij:</code> schema:</p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>zellij:bars</code></td><td>The tab bar, status bar and compact bar. Which bar it draws is chosen with its <code>role</code> configuration (<code>tab-bar</code>, <code>status-bar</code> or <code>compact-bar</code>)</td></tr>
+<tr><td><code>zellij:strider</code></td><td>The file picker (see the <a href="./filepicker-alias.html"><code>filepicker</code> alias</a>)</td></tr>
+<tr><td><code>zellij:session-manager</code></td><td>The session manager and welcome screen</td></tr>
+<tr><td><code>zellij:configuration</code></td><td>The <a href="./settings-screen.html">settings screen</a></td></tr>
+<tr><td><code>zellij:plugin-manager</code></td><td>The plugin manager</td></tr>
+<tr><td><code>zellij:about</code></td><td>The about screen</td></tr>
+<tr><td><code>zellij:share</code></td><td>Web sharing of the session (see the <a href="./web-client.html">web client</a>)</td></tr>
+<tr><td><code>zellij:multiple-select</code></td><td>Selecting several panes at once</td></tr>
+<tr><td><code>zellij:layout-manager</code></td><td>The layout manager</td></tr>
+<tr><td><code>zellij:prompt</code></td><td>The popups used by <a href="./zellij-prompt.html"><code>zellij prompt</code></a> and the <a href="./plugin-api-commands.html#prompt"><code>prompt</code></a> plugin command (see the <a href="./prompt-alias.html"><code>prompt</code> alias</a>)</td></tr>
+<tr><td><code>zellij:context-menu</code></td><td>The right-click <a href="./context-menu.html">context menu</a> (see the <a href="./context-menu-alias.html"><code>context-menu</code> alias</a>)</td></tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>Note:</strong> the tab bar, status bar and compact bar are one <a href="./plugin-lifecycle.html#shared-plugins">shared plugin</a>, <code>zellij:bars</code>. The names <code>zellij:tab-bar</code>, <code>zellij:status-bar</code> and <code>zellij:compact-bar</code> also work: they load <code>zellij:bars</code> with the matching <code>role</code>. The built-in <code>tab-bar</code>, <code>status-bar</code> and <code>compact-bar</code> <a href="./plugin-aliases.html">aliases</a> point to <code>zellij:bars</code> as well.</p>
+</blockquote>
+<p>Plugins loaded through <code>load_plugins</code> that need events from before any user is attached receive them once they have loaded.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="plugin-system-status.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="plugins.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
@@ -193,7 +213,7 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="plugin-system-status.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="plugins.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 

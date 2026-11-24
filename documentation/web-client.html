@@ -168,11 +168,16 @@
 </code></pre>
 <p><strong>IMPORTANT:</strong> These tokens are hashed in a local database and so will only be displayed once. They cannot be retrieved, only revoked (either from the CLI or from the <code>share</code> plugin).</p>
 <h2 id="https"><a class="header" href="#https">HTTPS?</a></h2>
-<p>The Zellij web server can work with a user provided SSL certificate to serve terminal sessions over an encrypted HTTPS connection. This is a hard requirement if listening on any interface that is not <code>127.0.0.1</code> but is very much recommended even when working on <code>127.0.0.1</code>. (for more detailed instructions on how to do this, take a look at the <a href="/tutorials/web-client/">screencast</a>).</p>
-<p>To set up an SSL certificate in the Zellij <a href="./configuration">configuration</a>:</p>
-<pre><code class="language-javascript">web_server_cert "/path/to/my/certs/localhost+3.pem" // certificate
-web_server_key "/path/to/my/certs/localhost+3-key.pem" // private key
+<p>The Zellij web server can work with a user provided SSL certificate to serve terminal sessions over an encrypted HTTPS connection. This is a hard requirement if listening on any interface that is not <code>127.0.0.1</code> (see the <a href="#serving-without-a-certificate">exception</a> below) but is very much recommended even when working on <code>127.0.0.1</code>. (for more detailed instructions on how to do this, take a look at the <a href="/tutorials/web-client/">screencast</a>).</p>
+<p>To set up an SSL certificate in the Zellij <a href="./configuration.html">configuration</a>, set the paths of the certificate and of its private key:</p>
+<pre><code class="language-javascript">web_server_cert "/path/to/my/certs/localhost+3.pem"
+web_server_key "/path/to/my/certs/localhost+3-key.pem"
 </code></pre>
+<h3 id="serving-without-a-certificate"><a class="header" href="#serving-without-a-certificate">Serving without a certificate</a></h3>
+<p>The web server can be allowed to serve plain, unencrypted HTTP on an interface other than <code>127.0.0.1</code> when no certificate is set:</p>
+<pre><code class="language-javascript">dangerously_allow_web_serving_without_a_certificate true
+</code></pre>
+<p>Anyone on the network can then read and change the traffic, including login tokens. This should only be used behind a trusted proxy that adds TLS (eg. a reverse proxy that holds the certificate), or on a fully trusted network. It does not override <code>enforce_https_for_localhost</code>. See <a href="./options.html#dangerously_allow_web_serving_without_a_certificate">the option</a>.</p>
 <h2 id="url-scheme"><a class="header" href="#url-scheme">URL scheme</a></h2>
 <p>By default, once started, the web server will listen on <code>http://127.0.0.1:8082</code>. When connecting to this address, users will be greeted with the <code>welcome-screen</code>, allowing them to start a new session, attach to an existing one or resurrect an exited one.</p>
 <p>The web server works with a URL scheme, such that following the root URL with a session-name (eg. <code>http://127.0.0.1:8082/my-amazing-session</code>), will:</p>
@@ -184,24 +189,41 @@ web_server_key "/path/to/my/certs/localhost+3-key.pem" // private key
 <p>This means that if we bookmark this URL, we will be able to drop back in to exactly where we left off with this particular session - even if we've since shut down our machine completely.</p>
 <h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
 <p>To configure the webserver, in the Zellij <a href="./configuration.html">configuration</a>:</p>
-<pre><code class="language-javascript">web_server true // always start the web server on Zellij startup (default: false)
-web_server_ip "0.0.0.0" // the IP to listen on, 0.0.0.0 is all (default: 127.0.0.1)
-web_server_port 443 // the port to listen on (default: 8082)
-web_server_cert "/path/to/my/certs/localhost+3.pem" // SSL certificate
-web_server_key "/path/to/my/certs/localhost+3-key.pem" // SSL private key
-enforce_https_on_localhost true // whether to enforce an https certificate being present also when listening on localhost (default: false)
+<pre><code class="language-javascript">web_server true
+web_server_ip "0.0.0.0"
+web_server_port 443
+web_server_cert "/path/to/my/certs/localhost+3.pem"
+web_server_key "/path/to/my/certs/localhost+3-key.pem"
+enforce_https_for_localhost true
 </code></pre>
-<p>It's also possible to configure the browser terminal itself:</p>
+<div class="table-wrapper"><table><thead><tr><th>Option</th><th>Meaning</th><th>Default</th></tr></thead><tbody>
+<tr><td><a href="./options.html#web_server"><code>web_server</code></a></td><td>always start the web server on Zellij startup</td><td><code>false</code></td></tr>
+<tr><td><a href="./options.html#web_server_ip"><code>web_server_ip</code></a></td><td>the IP to listen on, <code>0.0.0.0</code> is all</td><td><code>127.0.0.1</code></td></tr>
+<tr><td><a href="./options.html#web_server_port"><code>web_server_port</code></a></td><td>the port to listen on</td><td><code>8082</code></td></tr>
+<tr><td><a href="./options.html#web_server_cert"><code>web_server_cert</code></a></td><td>the SSL certificate</td><td>none</td></tr>
+<tr><td><a href="./options.html#web_server_key"><code>web_server_key</code></a></td><td>the SSL private key</td><td>none</td></tr>
+<tr><td><a href="./options.html#enforce_https_for_localhost"><code>enforce_https_for_localhost</code></a></td><td>require a certificate also when listening on localhost</td><td><code>false</code></td></tr>
+<tr><td><a href="./options.html#dangerously_allow_web_serving_without_a_certificate"><code>dangerously_allow_web_serving_without_a_certificate</code></a></td><td>allow plain HTTP on other interfaces, see <a href="#serving-without-a-certificate">above</a></td><td><code>false</code></td></tr>
+</tbody></table>
+</div>
+<p>Changes to these options require a restart.</p>
+<h3 id="base_url"><a class="header" href="#base_url"><code>base_url</code></a></h3>
+<p>The <code>base_url</code> option configures the base URL path for the web server. This is useful when running Zellij behind a reverse proxy that serves it under a subpath. By default it is not set, and the web server serves everything at the root <code>/</code>.</p>
 <pre><code class="language-javascript">web_client {
-  font "Iosevka Term" // default is "monospace" - deferring this decision to the browser/os
-  cursor_blink true // default is false
-  cursor_style "block" // possibilities: "block", "bar", "underline"
-  cursor_inactive_style "outline" // possibilities: "outline", "block", "bar", "underline"
-  mac_option_is_meta false // default is true
+    base_url "/zellij"
+}
+</code></pre>
+<p>When set, the web server will serve all content under this path prefix (e.g., <code>https://my-server/zellij/my-session</code>). See also <a href="./options.html#base_url">options</a>.</p>
+<h3 id="web-client-configuration"><a class="header" href="#web-client-configuration">Web client configuration</a></h3>
+<p>It's also possible to configure the browser terminal itself, in the <code>web_client</code> block. Changes to this block require a restart.</p>
+<pre><code class="language-javascript">web_client {
+  font "Iosevka Term"
+  font_size 14
+  cursor_blink true
+  cursor_style "block"
+  cursor_inactive_style "outline"
+  mac_option_is_meta false
   theme {
-    // NOTE: this is the theme of the terminal web client which is separate from Zellij's theme
-    //
-    // all values are optional and should be in the form of "r g b" (eg. 10 20 30)
     background 10 20 30
     foreground 10 20 30
     black 10 20 30
@@ -228,10 +250,89 @@ enforce_https_on_localhost true // whether to enforce an https certificate being
   }
 }
 </code></pre>
+<div class="table-wrapper"><table><thead><tr><th>Key</th><th>Meaning</th><th>Default</th></tr></thead><tbody>
+<tr><td><code>font</code></td><td>the font family the browser draws the terminal with</td><td><code>"monospace"</code> (left to the browser and OS)</td></tr>
+<tr><td><code>font_size</code></td><td>the font size in pixels, from 1 to 65535</td><td>12 (24 on mobile)</td></tr>
+<tr><td><code>cursor_blink</code></td><td>whether the cursor blinks</td><td><code>false</code></td></tr>
+<tr><td><code>cursor_style</code></td><td><code>"block"</code>, <code>"bar"</code> or <code>"underline"</code></td><td><code>"block"</code></td></tr>
+<tr><td><code>cursor_inactive_style</code></td><td>the cursor shape while the browser tab is not focused: <code>"outline"</code>, <code>"block"</code>, <code>"bar"</code>, <code>"underline"</code> or <code>"no_style"</code></td><td><code>"outline"</code></td></tr>
+<tr><td><code>mac_option_is_meta</code></td><td>whether the Option key on macOS acts as Meta (Alt)</td><td><code>true</code></td></tr>
+<tr><td><code>base_url</code></td><td>see <a href="#base_url">above</a></td><td>none</td></tr>
+<tr><td><code>theme</code></td><td>the colors of the browser terminal</td><td>not set</td></tr>
+</tbody></table>
+</div>
+<p>The <code>theme</code> block is the theme of the browser terminal, which is separate from Zellij's own theme. All its values are optional and are given as <code>RGB</code> (eg. <code>10 20 30</code>).</p>
+<h3 id="connection-keep-alive"><a class="header" href="#connection-keep-alive">Connection keep-alive</a></h3>
+<p>The web server sends a WebSocket ping to each connected client every 30 seconds, and closes the connection if no reply arrives within 45 seconds. This keeps idle connections open through proxies that close quiet connections (eg. Cloudflare's 100 second idle timeout), which used to show false "connection lost" messages. Browsers reply to these pings on their own. These times are fixed and cannot be configured.</p>
 <h2 id="security-considerations-and-recommendations"><a class="header" href="#security-considerations-and-recommendations">Security Considerations and Recommendations</a></h2>
-<p>The Zellij web server is security and privacy conscious, enforcing HTTPS if accessed over the network and authentication at all times. It is however recommended to place the server behind a reverse proxy (such as <code>nginx</code>) if exposing it to an untrusted network (eg. the Internet). This is because the web server does not provide its own rate-limiting to mitigate denial of service and similar attacks.</p>
+<p>The Zellij web server is security and privacy conscious, enforcing HTTPS if accessed over the network (unless <a href="#serving-without-a-certificate">explicitly allowed otherwise</a>) and authentication at all times. It is however recommended to place the server behind a reverse proxy (such as <code>nginx</code>) if exposing it to an untrusted network (eg. the Internet). This is because the web server does not provide its own rate-limiting to mitigate denial of service and similar attacks.</p>
 <p>In its security model, the web-server assumes that <strong>authenticated users are trusted</strong>. This is because the server can only serve terminal sessions of a single particular user on a single particular machine. This user by-definition has access to start/stop the web server itself, as well as access sensitive information on the machine by nature of this being a terminal session.</p>
 <p>The web server only saves session-tokens (not the actual log-in tokens) in the browser as cookies, preventing javascript access to them and instead relying on http headers to authenticate them on the server side. Whenever an authentication token is revoked, all of its associated session tokens are revoked as well.</p>
+<h2 id="remote-terminal-attach"><a class="header" href="#remote-terminal-attach">Remote Terminal Attach</a></h2>
+<p>In addition to browser-based access, Zellij sessions can be attached remotely from another terminal using <code>zellij attach</code> with an HTTPS URL:</p>
+<pre><code>$ zellij attach https://my-server:8082/my-session
+</code></pre>
+<p>This connects to the remote Zellij web server and attaches to the specified session directly in the local terminal, without requiring a browser. Authentication is required via the <code>--token</code> flag:</p>
+<pre><code>$ zellij attach https://my-server:8082/my-session --token &lt;login-token&gt;
+</code></pre>
+<p>Use <code>--remember</code> to save the credentials locally for 4 weeks (avoiding repeated token entry):</p>
+<pre><code>$ zellij attach https://my-server:8082/my-session --token &lt;login-token&gt; --remember
+</code></pre>
+<p>Use <code>--forget</code> to clear previously saved credentials for a remote server:</p>
+<pre><code>$ zellij attach https://my-server:8082 --forget
+</code></pre>
+<p>A custom CA certificate can be specified with <code>--ca-cert</code>:</p>
+<pre><code>$ zellij attach https://my-server:8082/my-session --ca-cert /path/to/ca.pem
+</code></pre>
+<h3 id="self-signed-certificates"><a class="header" href="#self-signed-certificates">Self-Signed Certificates</a></h3>
+<p>Self-signed certificates are rejected by default. To connect to a server using a self-signed certificate, the <code>--insecure</code> flag must be passed:</p>
+<pre><code>$ zellij attach https://my-server:8082/my-session --insecure
+</code></pre>
+<p><strong>WARNING:</strong> The <code>--insecure</code> flag skips TLS certificate validation entirely. It should only be used for development or in trusted network environments.</p>
+<h3 id="attaching-from-the-zellij-terminal"><a class="header" href="#attaching-from-the-zellij-terminal">Attaching from the Zellij terminal</a></h3>
+<p>A remote session can also be opened in its own <a href="./zellij-terminal.html">Zellij terminal</a> window, without another terminal emulator. <code>zellij terminal</code> takes the same URL and the same flags (<code>--token</code>, <code>--remember</code>, <code>--forget</code>, <code>--ca-cert</code>, <code>--insecure</code>) as <code>zellij attach</code>:</p>
+<pre><code>$ zellij terminal https://my-server:8082/my-session --token &lt;login-token&gt;
+</code></pre>
+<p>Programs in a remote session opened this way cannot read the local clipboard (through OSC 52) unless <a href="./terminal-options.html#allow_remote_clipboard_read"><code>allow_remote_clipboard_read</code></a> is set in the <code>terminal</code> block. Local sessions follow <a href="./options.html#dangerously_enable_paste_buffer_read"><code>dangerously_enable_paste_buffer_read</code></a> instead.</p>
+<h2 id="read-only-tokens"><a class="header" href="#read-only-tokens">Read-Only Tokens</a></h2>
+<p>In addition to regular login tokens, read-only tokens can be created. Users authenticating with a read-only token can view sessions but cannot send input or interact with them.</p>
+<p>Read-only tokens can be created from the CLI:</p>
+<pre><code>$ zellij web --create-read-only-token
+</code></pre>
+<p>Or with an optional name:</p>
+<pre><code>$ zellij web --create-read-only-token --token-name "observer-token"
+</code></pre>
+<p>Read-only tokens are managed in the same way as regular tokens - they can be listed with <code>--list-tokens</code> and revoked with <code>--revoke-token</code>.</p>
+<h2 id="server-status"><a class="header" href="#server-status">Server Status</a></h2>
+<p>The status of the Zellij web server can be queried from the CLI:</p>
+<pre><code>$ zellij web --status
+</code></pre>
+<p>This reports whether the server is online or offline, and if online, the base URL it is listening on.</p>
+<p>Optional flags:</p>
+<ul>
+<li><code>--timeout &lt;seconds&gt;</code> - Timeout in seconds for the status check (default: 30)</li>
+<li><code>--ip &lt;IP&gt;</code> - IP address to check (defaults to the configured address)</li>
+<li><code>--port &lt;PORT&gt;</code> - Port to check (defaults to the configured port)</li>
+</ul>
+<pre><code>$ zellij web --status --timeout 5 --ip 0.0.0.0 --port 443
+</code></pre>
+<h2 id="installing-as-an-app-pwa"><a class="header" href="#installing-as-an-app-pwa">Installing as an app (PWA)</a></h2>
+<p>The web client is a Progressive Web App: it serves a web manifest, icons and the relevant iOS meta tags, and so can be installed as a standalone application from Chromium-based browsers, Firefox, Safari and iOS.</p>
+<p>Once installed, it opens in its own window without browser chrome. This works behind a reverse proxy as well, including when the client is served under a <a href="#base_url"><code>base_url</code></a> prefix. There is nothing to configure.</p>
+<h2 id="mobile-support"><a class="header" href="#mobile-support">Mobile Support</a></h2>
+<p>The web client detects mobile browsers (through a coarse pointer and user-agent detection) and switches to a dedicated mobile interface automatically. There is nothing to configure.</p>
+<p>The mobile interface includes:</p>
+<ol>
+<li><strong>Viewport Resizing</strong>: The terminal automatically resizes to match the real mobile viewport, accounting for dynamic changes such as the address bar showing/hiding and the on-screen keyboard appearing/disappearing.</li>
+<li><strong>Touch Scroll</strong>: Vertical touch swipes are converted to terminal scroll events, allowing natural scrolling through terminal output.</li>
+<li><strong>Touch chrome</strong>: touch-friendly UI controls replacing the keyboard-driven ones.</li>
+<li><strong>Pane and tab pickers</strong>: for switching between panes and tabs without keybindings.</li>
+<li><strong>On-screen keyboard</strong>: including keys that physical mobile keyboards lack (this can also be shown and hidden by plugins).</li>
+<li><strong>Panning and a fit toggle</strong>: to move around a session larger than the screen, or to fit it to the screen.</li>
+<li><strong>Single pane fullscreen</strong>: focusing on one pane at a time, which is often the only practical layout on a phone.</li>
+<li><strong>Light theme support</strong>: following the device color scheme.</li>
+<li><strong>Welcome screen</strong>: rendered client-side when connecting without an existing session.</li>
+</ol>
 <h2 id="this-feature-can-optionally-be-disabled-at-compile-time"><a class="header" href="#this-feature-can-optionally-be-disabled-at-compile-time">This feature can optionally be disabled at compile-time</a></h2>
 <p>For those who are averse to this feature (even when it's disabled - which is the default), Zellij can be compiled completely without this feature or its dependencies by removing the <code>web-server-capability</code> compile-time flag. For convenience, Zellij also provides an additional pre-built binary compiled without this flag called <code>zellij-no-web</code>.</p>
 
@@ -239,11 +340,11 @@ enforce_https_on_localhost true // whether to enforce an https certificate being
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="session-resurrection.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="shell-integration.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="compatibility.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="distributions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -253,11 +354,11 @@ enforce_https_on_localhost true // whether to enforce an https certificate being
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="session-resurrection.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="shell-integration.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="compatibility.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="distributions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
